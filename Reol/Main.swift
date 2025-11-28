@@ -1,5 +1,5 @@
 //
-//  ReolApp.swift
+//  Main.swift
 //  Reol
 //
 //  Created by reol on 2025/11/28.
