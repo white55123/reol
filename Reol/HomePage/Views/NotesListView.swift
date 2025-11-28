@@ -25,7 +25,7 @@ struct NotesListView: View {
     
     var body: some View {
         NavigationView {
-            ZStack {
+            Group {
                 if filteredNotes.isEmpty {
                     VStack(spacing: 20) {
                         Image(systemName: "note.text")
@@ -40,6 +40,7 @@ struct NotesListView: View {
                                 .foregroundColor(.secondary)
                         }
                     }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                     List {
                         ForEach(filteredNotes) { note in
@@ -93,7 +94,7 @@ struct NoteRowView: View {
                     .lineLimit(2)
             }
             
-            Text(note.updatedAt, style: .relative)
+            Text(note.updatedAt, style: .date)
                 .font(.caption)
                 .foregroundColor(.secondary)
         }
