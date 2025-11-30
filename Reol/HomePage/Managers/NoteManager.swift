@@ -22,7 +22,17 @@ class NoteManager: ObservableObject {
     func loadNotes() {
         if let data = UserDefaults.standard.data(forKey: notesKey),
            let decodedNotes = try? JSONDecoder().decode([Note].self, from: data) {
-            notes = decodedNotes.sorted { $0.updatedAt > $1.updatedAt }
+            notes = sortNotes(decodedNotes)
+        }
+    }
+    
+    // 排序笔记：置顶的在前，然后按更新时间排序
+    private func sortNotes(_ notes: [Note]) -> [Note] {
+        return notes.sorted { note1, note2 in
+            if note1.isPinned != note2.isPinned {
+                return note1.isPinned
+            }
+            return note1.updatedAt > note2.updatedAt  // 同类型按更新时间排序
         }
     }
     
@@ -35,7 +45,8 @@ class NoteManager: ObservableObject {
     
     // 添加笔记
     func addNote(_ note: Note) {
-        notes.insert(note, at: 0)
+        notes.append(note)
+        notes = sortNotes(notes)
         saveNotes()
     }
     
@@ -45,7 +56,18 @@ class NoteManager: ObservableObject {
             var updatedNote = note
             updatedNote.updatedAt = Date()
             notes[index] = updatedNote
-            notes.sort { $0.updatedAt > $1.updatedAt }
+            notes = sortNotes(notes)
+            saveNotes()
+        }
+    }
+    
+    // 切换置顶状态
+    func togglePin(_ note: Note) {
+        if let index = notes.firstIndex(where: { $0.id == note.id }) {
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                notes[index].isPinned.toggle()
+                notes = sortNotes(notes)
+            }
             saveNotes()
         }
     }

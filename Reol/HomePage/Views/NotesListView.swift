@@ -44,11 +44,9 @@ struct NotesListView: View {
                 } else {
                     List {
                         ForEach(filteredNotes) { note in
-                            NavigationLink(destination: NoteEditView(note: note, noteManager: noteManager)) {
-                                NoteRowView(note: note)
-                            }
+                            NoteRow(note: note, noteManager: noteManager)
+                                .id("\(note.id)-\(note.isPinned)")
                         }
-                        .onDelete(perform: deleteNotes)
                     }
                     .listStyle(.plain)
                 }
@@ -78,31 +76,91 @@ struct NotesListView: View {
     }
 }
 
+// 笔记行容器
+struct NoteRow: View {
+    let note: Note
+    @ObservedObject var noteManager: NoteManager
+    
+    // 实时获取最新的 note 数据
+    var currentNote: Note {
+        noteManager.notes.first(where: { $0.id == note.id }) ?? note
+    }
+    
+    var body: some View {
+        NavigationLink(destination: NoteEditView(note: currentNote, noteManager: noteManager)) {
+            NoteRowView(note: currentNote)
+        }
+        .listRowBackground(currentNote.isPinned ? Color.yellow.opacity(0.2) : Color.clear)
+        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+            // 删除按钮
+            Button(role: .destructive) {
+                noteManager.deleteNote(currentNote)
+            } label: {
+                Label("删除", systemImage: "trash")
+            }
+            
+            // 置顶/取消置顶按钮
+            PinButton(note: currentNote, noteManager: noteManager)
+        }
+    }
+}
+
 struct NoteRowView: View {
     let note: Note
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(note.title.isEmpty ? "无标题" : note.title)
-                .font(.headline)
-                .lineLimit(1)
-            
-            if !note.content.isEmpty {
-                Text(note.content)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .lineLimit(2)
+        HStack(alignment: .top, spacing: 8) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(note.title.isEmpty ? "无标题" : note.title)
+                    .font(.headline)
+                    .lineLimit(1)
+                
+                if !note.content.isEmpty {
+                    Text(note.content)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .lineLimit(2)
+                }
+                
+                HStack(spacing: 4) {
+                    Text(note.createdAt, style: .date)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    
+                    if note.isPinned {
+                        Image(systemName: "pin.fill")
+                            .font(.caption)
+                            .foregroundColor(.orange)
+                    }
+                }
             }
-            
-            Text(note.updatedAt, style: .date)
-                .font(.caption)
-                .foregroundColor(.secondary)
         }
         .padding(.vertical, 4)
+    }
+}
+
+// 置顶按钮视图
+struct PinButton: View {
+    let note: Note
+    @ObservedObject var noteManager: NoteManager
+    
+    var currentNote: Note {
+        noteManager.notes.first(where: { $0.id == note.id }) ?? note
+    }
+    
+    var body: some View {
+        Button {
+            noteManager.togglePin(note)
+        } label: {
+            Label(currentNote.isPinned ? "取消置顶" : "置顶",
+                  systemImage: currentNote.isPinned ? "pin.slash" : "pin.fill")
+        }
+        .tint(currentNote.isPinned ? .orange : .blue)
     }
 }
 
 #Preview {
     NotesListView()
 }
+
 

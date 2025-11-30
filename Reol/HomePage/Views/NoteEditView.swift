@@ -9,15 +9,18 @@ import SwiftUI
 
 struct NoteEditView: View {
     @Environment(\.dismiss) var dismiss
-    @State private var note: Note
+    @State private var note: Note          // 当前的笔记
+    @State private var originalNote: Note  // 保存原始笔记，用于取消操作
     let noteManager: NoteManager
     let isNewNote: Bool
     
     @FocusState private var isTitleFocused: Bool
     @FocusState private var isContentFocused: Bool
+    @State private var showSaveSuccess = false  // 显示保存成功提示
     
     init(note: Note, noteManager: NoteManager, isNewNote: Bool = false) {
         self._note = State(initialValue: note)
+        self._originalNote = State(initialValue: note)
         self.noteManager = noteManager
         self.isNewNote = isNewNote
     }
@@ -43,7 +46,7 @@ struct NoteEditView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("取消") {
-                        dismiss()
+                        cancelEdit()
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -66,10 +69,24 @@ struct NoteEditView: View {
     private func saveNote() {
         if isNewNote {
             noteManager.addNote(note)
+            originalNote = note
         } else {
             noteManager.updateNote(note)
+            originalNote = note
         }
-        dismiss()
+        showSaveSuccess = true
+        isTitleFocused = false
+        isContentFocused = false
+    }
+    
+    private func cancelEdit() {
+        if isNewNote {
+            dismiss()
+        } else {
+            note = originalNote
+            isTitleFocused = false
+            isContentFocused = false
+        }
     }
 }
 
