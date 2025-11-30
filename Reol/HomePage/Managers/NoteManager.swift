@@ -11,6 +11,7 @@ import SwiftUI
 
 class NoteManager: ObservableObject {
     @Published var notes: [Note] = []
+    @Published var isLoading: Bool = true  // 添加加载状态
     
     private let notesKey = "SavedNotes"
     
@@ -20,9 +21,19 @@ class NoteManager: ObservableObject {
     
     // 加载笔记
     func loadNotes() {
-        if let data = UserDefaults.standard.data(forKey: notesKey),
-           let decodedNotes = try? JSONDecoder().decode([Note].self, from: data) {
-            notes = sortNotes(decodedNotes)
+        // 确保 isLoading 在初始化时就是 true（已经在属性声明中设置）
+        // 使用异步加载，避免阻塞主线程
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            // 同步加载数据（UserDefaults 读取很快）
+            if let data = UserDefaults.standard.data(forKey: self.notesKey),
+               let decodedNotes = try? JSONDecoder().decode([Note].self, from: data) {
+                self.notes = self.sortNotes(decodedNotes)
+            }
+            // 延迟一点时间再设置为 false，确保启动页面至少显示一段时间
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                self.isLoading = false
+            }
         }
     }
     
@@ -45,7 +56,14 @@ class NoteManager: ObservableObject {
     
     // 添加笔记
     func addNote(_ note: Note) {
-        notes.append(note)
+        // 检查笔记是否已存在（通过 ID），如果存在则更新而不是添加
+        if let index = notes.firstIndex(where: { $0.id == note.id }) {
+            var updatedNote = note
+            updatedNote.updatedAt = Date()
+            notes[index] = updatedNote
+        } else {
+            notes.append(note)
+        }
         notes = sortNotes(notes)
         saveNotes()
     }

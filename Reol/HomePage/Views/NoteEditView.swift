@@ -12,17 +12,23 @@ struct NoteEditView: View {
     @State private var note: Note          // 当前的笔记
     @State private var originalNote: Note  // 保存原始笔记，用于取消操作
     let noteManager: NoteManager
-    let isNewNote: Bool
+    @State private var isNewNote: Bool     // 改为 @State，保存后可以更新
     
     @FocusState private var isTitleFocused: Bool
     @FocusState private var isContentFocused: Bool
     @State private var showSaveSuccess = false  // 显示保存成功提示
     
+    // 检查是否有内容（标题或内容不为空）
+    private var hasContent: Bool {
+        !note.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+        !note.content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+    
     init(note: Note, noteManager: NoteManager, isNewNote: Bool = false) {
         self._note = State(initialValue: note)
         self._originalNote = State(initialValue: note)
         self.noteManager = noteManager
-        self.isNewNote = isNewNote
+        self._isNewNote = State(initialValue: isNewNote)
     }
     
     var body: some View {
@@ -45,8 +51,8 @@ struct NoteEditView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("取消") {
-                        cancelEdit()
+                    Button("返回") {
+                        dismiss()
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -54,6 +60,7 @@ struct NoteEditView: View {
                         saveNote()
                     }
                     .fontWeight(.semibold)
+                    .disabled(isNewNote && !hasContent)
                 }
             }
             .onAppear {
@@ -70,6 +77,8 @@ struct NoteEditView: View {
         if isNewNote {
             noteManager.addNote(note)
             originalNote = note
+            // 保存后，将 isNewNote 设为 false，防止重复添加
+            isNewNote = false
         } else {
             noteManager.updateNote(note)
             originalNote = note
