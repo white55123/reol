@@ -11,6 +11,7 @@ struct ContentView: View {
     @StateObject private var noteManager = NoteManager()
     @State private var showSplash = true  // 独立管理启动页面显示状态
     @State private var hasStartedHiding = false  // 防止重复触发
+    @State private var selectedTab = 0  // 当前选中的 Tab
     
     var body: some View {
         ZStack {
@@ -20,11 +21,32 @@ struct ContentView: View {
                     .transition(.opacity)
                     .zIndex(1)
             } else {
-                // 主内容视图
-                NotesListView()
-                    .environmentObject(noteManager)
-                    .transition(.opacity)
-                    .zIndex(0)
+                // 主内容视图 - 使用 TabView
+                TabView(selection: $selectedTab) {
+                    // 首页 - 笔记列表
+                    HomeView()
+                        .environmentObject(noteManager)
+                        .tabItem {
+                            Label("首页", systemImage: "note.text")
+                        }
+                        .tag(0)
+                    
+                    // 设置页面
+                    SettingsView()
+                        .tabItem {
+                            Label("设置", systemImage: "gearshape")
+                        }
+                        .tag(1)
+                    
+                    // 个人中心
+                    ProfileView()
+                        .tabItem {
+                            Label("我的", systemImage: "person")
+                        }
+                        .tag(2)
+                }
+                .transition(.opacity)
+                .zIndex(0)
             }
         }
         .onChange(of: noteManager.isLoading) {

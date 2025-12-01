@@ -34,33 +34,49 @@ struct NotesListView: View {
     var body: some View {
         NavigationView {
             GeometryReader { geometry in
-                Group {
-                    if filteredNotes.isEmpty {
-                        // 空状态：没有笔记或搜索无结果
-                        VStack(spacing: 20) {
-                            Image("wusaqi2")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 120, height: 120)
-                            Text(searchText.isEmpty ? "还没有笔记" : "没有找到匹配的笔记")
-                                .font(.title2)
-                                .foregroundColor(.gray)
-                            if searchText.isEmpty {
-                                Text("点击右上角的 + 按钮创建第一条笔记")
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                            }
+                VStack(spacing: 0) {
+                    // 笔记统计文本
+                    if searchText.isEmpty {
+                        HStack {
+                            Text("\(noteManager.notes.count)篇笔记")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                                .padding(.horizontal)
+                                .padding(.vertical, 5)
+                            Spacer()
                         }
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    } else {
-                        // 有笔记：显示列表
-                        List {
-                            ForEach(filteredNotes) { note in
-                                NoteRow(note: note, noteManager: noteManager)
-                                    .id("\(note.id)-\(note.isPinned)")
+                        .background(Color(.systemBackground))
+                    }
+                    
+                    // 主内容
+                    Group {
+                        if filteredNotes.isEmpty {
+                            // 空状态：没有笔记或搜索无结果
+                            VStack(spacing: 20) {
+                                Image("wusaqi2")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 120, height: 120)
+                                Text(searchText.isEmpty ? "还没有笔记" : "没有找到匹配的笔记")
+                                    .font(.title2)
+                                    .foregroundColor(.gray)
+                                if searchText.isEmpty {
+                                    Text("点击右上角的 + 按钮创建第一条笔记")
+                                        .font(.subheadline)
+                                        .foregroundColor(.secondary)
+                                }
                             }
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        } else {
+                            // 有笔记：显示列表
+                            List {
+                                ForEach(filteredNotes) { note in
+                                    NoteRow(note: note, noteManager: noteManager)
+                                        .id("\(note.id)-\(note.isPinned)")
+                                }
+                            }
+                            .listStyle(.plain)
                         }
-                        .listStyle(.plain)
                     }
                 }
                 .navigationTitle("记事本")

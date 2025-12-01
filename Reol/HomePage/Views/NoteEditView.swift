@@ -24,6 +24,11 @@ struct NoteEditView: View {
         !note.content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
     
+    // 计算正文字数
+    private var contentWordCount: Int {
+        note.content.trimmingCharacters(in: .whitespacesAndNewlines).count
+    }
+    
     init(note: Note, noteManager: NoteManager, isNewNote: Bool = false) {
         self._note = State(initialValue: note)
         self._originalNote = State(initialValue: note)
@@ -34,12 +39,19 @@ struct NoteEditView: View {
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
-                TextField("标题", text: $note.title)
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .padding(.horizontal)
-                    .padding(.top, 8)
-                    .focused($isTitleFocused)
+                VStack(alignment: .leading, spacing: 8) {
+                    TextField("标题", text: $note.title)
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .focused($isTitleFocused)
+                    
+                    // 字数统计
+                    Text("\(contentWordCount)字")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .padding(.horizontal)
+                .padding(.top, 8)
                 
                 Divider()
                 
