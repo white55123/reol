@@ -157,7 +157,21 @@ struct NoteRow: View {
         NavigationLink(destination: NoteEditView(note: currentNote, noteManager: noteManager)) {
             NoteRowView(note: currentNote)
         }
-        .listRowBackground(currentNote.isPinned ? Color.yellow.opacity(0.2) : Color.clear)
+        
+        .listRowBackground(
+            Group {
+                if currentNote.isPinned {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.yellow.opacity(0.2))
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                    }
+                } else {
+                    Color.clear
+                }
+            }
+        )
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
             // 删除按钮
             Button(role: .destructive) {
@@ -177,7 +191,7 @@ struct NoteRowView: View {
     
     var body: some View {
         HStack(alignment: .top, spacing: 8) {
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 20) {
                 Text(note.title.isEmpty ? "无标题" : note.title)
                     .font(.headline)
                     .lineLimit(1)
@@ -202,7 +216,7 @@ struct NoteRowView: View {
                 }
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 8)
     }
 }
 
